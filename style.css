@@ -63,8 +63,9 @@ canvas{
     display: inline-block;
     margin: 1em;
 }
-.heart{ background-image: url(./heart.png);}
-.coin{ background-image: url(./coin.png);}
+.heart{ background-image: url(./interface/heart.png);}
+.coin{ background-image: url(./interface/coin.png);}
+.diamond{ background-image: url(./interface/diamond.png);}
 
 .smallImg{ width: 1em; height: 1em; display: inline-block; }
 .towerImg{ width: 2.5em; height: 2.5em; display: block; }
@@ -90,9 +91,9 @@ canvas{
     margin-bottom: 1em;
 }
 .play,.paused,.skip{ cursor: pointer;}
-.paused{ background-image: url(./pause.png); }
-.play{ background-image: url(./play.png);}
-.skip{ background-image: url(./skip.png);}
+.paused{ background-image: url(./interface/pause.png); }
+.play{ background-image: url(./interface/play.png);}
+.skip{ background-image: url(./interface/skip.png);}
 .skip.unavailable{ filter: saturate( 0 ); opacity: 0.25; }
 .timer{ width: 12.5em; }
 
