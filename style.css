@@ -1,0 +1,120 @@
+:root{
+    --background: #3C3B3D;
+}
+
+body{
+    background-color: var(--background);
+    margin: 0;
+    font-family: 'Lexend Deca', sans-serif;
+    color: #fffC;
+    overflow: auto;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    user-select: none;
+}
+
+*,*::before{
+    box-sizing: border-box;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+.flexy{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.colStack{
+    flex-direction: column;
+}
+
+canvas{
+    position: absolute;
+    display: block;
+    margin: 0 auto;
+}
+
+#background{ z-index: 1; }
+#mobs{ z-index: 3; }
+#towers{ z-index: 5; }
+
+.panel{
+    width: 100%;
+    height: 10em;
+    background-color: #0e0e0f;
+    position: absolute;
+}
+.top{ top: 0; }
+.bottom{ bottom: 0; }
+.topBox{
+    width: calc( 100% / 3 );
+    padding: 1em;
+}
+.bottomBox{
+    height: 100%;
+    padding: 1em;
+}
+.img{
+    width: 2em;
+    height: 2em;
+    display: inline-block;
+    margin: 1em;
+}
+.heart{ background-image: url(./heart.png);}
+.coin{ background-image: url(./coin.png);}
+
+.smallImg{ width: 1em; height: 1em; display: inline-block; }
+.towerImg{ width: 2.5em; height: 2.5em; display: block; }
+.panelTitle{ font-size: 1.25em; }
+.towerName{ font-size: 1.25em; }
+.panelCost{ font-size: 1em; }
+.buyButton,.upgradeButton,.sellButton{
+    height: 2em;
+    width: 12.5em;
+    background-color: #444;
+    cursor: pointer;
+}
+.sellButton{ background-color: #633;}
+.upgradeButton.max{
+    width: 6em;
+    margin-left: 1em;
+}
+.buyButton.inactive,.upgradeButton.inactive{
+    opacity: 0.25;
+    cursor: default;
+}
+.bottomGutter{
+    margin-bottom: 1em;
+}
+.play,.paused,.skip{ cursor: pointer;}
+.paused{ background-image: url(./pause.png); }
+.play{ background-image: url(./play.png);}
+.skip{ background-image: url(./skip.png);}
+.skip.unavailable{ filter: saturate( 0 ); opacity: 0.25; }
+.timer{ width: 12.5em; }
+
+.basic{ background-image: url(./towers/basic.png);}
+.arrow{ background-image: url(./towers/arrow.png);}
+.cannon{ background-image: url(./towers/cannon.png);}
+
+.summaryBox{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+.towerName{
+    margin-left: 0.5em;
+}
+.topStack{
+    width: 100%;
+    height: calc( 100% / 3 );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#waveCount, #levelNum, #waveRecord{
+    margin: 0 0.5em;
+}
