@@ -291,7 +291,7 @@ function paintMobs(){
     }
 }
 
-function cleanup( ctx ){ ctx.clearRect( 0, 0, canvW, canvH ); }
+function cleanup( ctx ){ ctx.clearRect( 0, 0, unit( canvW ), unit( canvH ) ); }
 
 function pathFind( n ){
     let arr = JSON.parse( jason[n] );
