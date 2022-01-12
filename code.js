@@ -111,12 +111,12 @@ function clicked( e, down ){
         togglePause();
     }
     else if( e.target.classList.contains( `skip` ) && down ){
-        if( !game.paused ){ doSkip(); }
+        if( !game.paused && !game.over ){ doSkip(); }
     }
 }
 function doLoop(){
     if( !liveness ){}
-    else if( game.paused ){}
+    else if( game.paused || game.over ){}
     else if( editMode ){}
     else{
         // make and move mobs
@@ -125,12 +125,9 @@ function doLoop(){
             if( wave.length == 0 ){ popNextWave(); }
             popMobs( game.waves.count, wave[0] );
             let unspawned = mobs.filter( element => element.countDown > -1 ).length;
-            game.waves.countDown = game.vars.waveTime + game.vars.mobGap * unspawned;
+            game.waves.countDown = game.vars.waveTime + stat.mobs[mobs[0].type].queue * unspawned;
             wave.shift();
             game.waves.count++;
-            if( game.waves.count > meta.records[`level${game.level.num}`] ){
-                meta.records[`level${game.level.num}`] = game.waves.count;
-            }
             updateWaveCount();
         }
         for( m in mobs ){
@@ -197,6 +194,18 @@ function togglePause(){
 
 function newLevel( n ){
     // fresh slate
+    towers = [];
+    mobs = [];
+    particles = [];
+    wave = [];
+    game.over = false;
+    game.ticks = 0;
+    game.autoSkip = false;
+    game.me.health = 20;
+    game.me.coin = 100;
+    game.level = { selected: null };
+    game.waves = { countDown: 0, count: 0, startTick: 0, completed: 0 };
+    // retile
     tiles = [];
     for( let y = 0; y < canvH / tileDim; y++ ){
         tiles.push( [] );
@@ -210,7 +219,10 @@ function newLevel( n ){
     }
     pathFind( n );
     paintTiles();
-    game.paused = true;
+    paintMobs();
+    paintTowers();
+    game.paused = false;
+    togglePause();
     if( meta.records[`level${n}`] == undefined ){
         meta.records[`level${n}`] = 0;
     }
@@ -344,14 +356,16 @@ function isCardinal( x1, y1, x2, y2 ){
 
 function popNextWave(){
     document.querySelector(`.skip`).classList.add( `unavailable` );
-    if( game.waves.count < 10 ){ wave = [ `regular`, `regular`, `regular`, `regular`, `fast`, `fast`, `tanky`, `tanky`, `fast` ]; }
-    else{
-        wave = [ `regular`, `regular`, `regular`, `fast`, `fast`, `tanky`, `tanky`, `flying` ];
-        let xFactor = [ `regular`, `fast`, `tanky`, `flying`, `lucky` ];
-        wave.push( shuffle( xFactor )[0] );
+    if( game.waves.count < 10 ){ wave = [ `regular`, `regular`, `fast`, `tanky` ]; }
+    else{ wave = [ `regular`, `regular`, `fast`, `tanky`, `flying` ]; }
+    let tmp = [];
+    for( m in stat.mobs ){
+        if( stat.mobs[m].from <= game.waves.count && stat.mobs[m].from !== -1 ){ tmp.push( m ); }
     }
+    while( wave.length < 9 ){ wave.push( shuffle( tmp )[0] ); }
     wave = shuffle( wave );
     wave.push( `boss` );
+    if( ( game.waves.count ) + 30 % 50 == 0 ){ wave[4] = `lucky`; }
 }
 
 function popMobs( n, type ){
@@ -362,7 +376,7 @@ function popMobs( n, type ){
     for( let i = 0; i < amount; i++ ){
         mobs.push( {
             type: type
-            , countDown: i * game.vars.mobGap
+            , countDown: i * stat.mobs[type].queue
             , oldTile: 0
             , newTile: 1
             , loc: { x: null, y: null }
@@ -415,12 +429,19 @@ function dealDamage( m ){
     if( game.me.health <= 0 ){ 
         game.me.health = 0;
         console.log( `game over` );
+        game.over = true;
         game.paused = true;
     }
     removeMob( m );
 }
 
 function removeMob( m ){
+    let kin = mobs.filter( element => element.mod == mobs[m].mod ).length;
+    if( kin == 1 ){ game.waves.completed++; }
+    if( game.waves.completed > meta.records[`level${game.level.num}`] && !game.over ){
+        meta.records[`level${game.level.num}`] = game.waves.completed;
+    }
+    updateWaveCount();
     mobs.splice( m, 1 );
 }
 
@@ -483,9 +504,9 @@ function moveParticles(){
             }
             else if( particles[p].type == `splash` ){
                 for( m in mobs ){
-                    if( intersect( mobs[m].loc.x, mobs[m].loc.y, unit( mobDim ), particles[p].loc.x, particles[p].loc.y, unit( 50 ) ) ){ // todo dynamic splash
+                    if( intersect( mobs[m].loc.x, mobs[m].loc.y, unit( mobDim ), particles[p].loc.x, particles[p].loc.y, unit( tileDim ) ) ){ // todo dynamic splash
                         if( mobs[m].type !== `flying` ){
-                            let perc = unit( mobDim ) / xyToR( mobs[m].loc.x - particles[p].loc.x, mobs[m].loc.y - particles[p].loc.y );
+                            let perc = Math.min( 1, unit( mobDim ) / xyToR( particles[p].loc.x - mobs[m].loc.x, particles[p].loc.y - mobs[m].loc.y ) );
                             hurtMob( p, m, perc );
                             // todo make this work properly
                         }
@@ -539,21 +560,7 @@ function paintTowers(){
     let dim = unit( tileDim );
     ctxT.strokeStyle = colour.range;
     ctxT.lineWidth = 1;    
-    for( t in towers ){
-        drawTower( towers[t].type, towers[t].loc.x - dim / 2, towers[t].loc.y - dim / 2, ctxT, t );
-        // let delta = unit( ( tileDim - towerDim ) / 2 );
-        // let x = unit( towers[t].tileX * tileDim );
-        // let y = unit( towers[t].tileY * tileDim );
-        // ctxT.drawImage( img[towers[t].type], x + delta, y + delta, dim, dim );
-
-        // let perc = ( getRate( t ) - towers[t].countDown ) / getRate( t );
-        // x = unit( towers[t].tileX * tileDim + tileDim / 2 ) - unit( tileDim ) * perc / 2;
-        // ctxM.beginPath();
-        // ctxM.rect( x, y + unit( tileDim - firingTimerHeight ), unit( tileDim * perc ), unit( firingTimerHeight ) );
-        // ctxM.fillStyle = colour.firing;
-        // ctxM.fill();
-        // ctxM.closePath();
-    }
+    for( t in towers ){ drawTower( towers[t].type, towers[t].loc.x - dim / 2, towers[t].loc.y - dim / 2, ctxT, t ); };
 }
 
 function paintTowerRing( t ){
@@ -881,7 +888,6 @@ function drawTower( type, x, y, ctx, t ){
 
 
 let tileTypes = [`path`,`null`,`selected`,`place`,`start`,`end`];
-console.log( stat.mobs.length )
 var loaded = { done: 0, of: 6 }
 for( key in stat.mobs ){ loaded.of++; }
 for( key in stat.towers ){ loaded.of++; }
@@ -1043,13 +1049,10 @@ function makeDegrees( n ){
 UI pause
 Split path
 dynamic scale
-fix canvas max actual dimensions
-new mob type == Many (bigger packs, closer together)
-wave "completion" as when the final mob is removed from a wave one way or the other
+support towers and foils to them
 
 tower legs using either bezierCurveTo() or quadraticCurveTo()
 
-actual art...
 
 */
 /* IDEAS

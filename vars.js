@@ -59,14 +59,14 @@ var wave = [];
 var game = {
     ticks: 0
     , paused: false
+    , over: false
     , autoSkip: false
     , me: {
         health: 20
         , coin: 100
     }
     , level: { selected: null }
-    , stats: { dealt: 0, waves: 0 }
-    , waves: { countDown: 0, count: 0, startTick: 0 }
+    , waves: { countDown: 0, count: 0, startTick: 0, completed: 0 }
     , vars: {
         waveTime: 14990 / frameRate
         , mobGap: 1000 / frameRate
@@ -107,12 +107,15 @@ var stat = {
         // , fire: {}
     },
     mobs: {
-        regular:  { speed: 1,    health: 1,   flying: false, reward: 1,  damage: 1, pack: 6 }
-        , tanky:  { speed: 0.5,  health: 1.5, flying: false, reward: 1,  damage: 1, pack: 5 }
-        , fast:   { speed: 2,    health: 0.8, flying: false, reward: 1,  damage: 1, pack: 5 }
-        , flying: { speed: 1,    health: 0.3, flying: true,  reward: 1,  damage: 1, pack: 5 }
-        , lucky:  { speed: 2.5,  health: 4,   flying: false, reward: 50, damage: 0, pack: 1 }
-        , boss:   { speed: 0.75, health: 7.5, flying: false, reward: 35, damage: 5, pack: 1 }
+        regular:    { speed: 1,    health: 1,   flying: false, reward: 1,  damage: 1, pack: 6,  queue: 100, from: 0 }
+        , tanky:    { speed: 0.5,  health: 1.5, flying: false, reward: 1,  damage: 1, pack: 5,  queue: 100, from: 0 }
+        , fast:     { speed: 2,    health: 0.8, flying: false, reward: 1,  damage: 1, pack: 5,  queue: 100, from: 0 }
+        , flying:   { speed: 1,    health: 0.3, flying: true,  reward: 1,  damage: 1, pack: 5,  queue: 100, from: 10 }
+        , many:     { speed: 1,    health: 0.9, flying: true,  reward: 1,  damage: 1, pack: 10, queue: 50,  from: 20 }
+        , armoured: { speed: 0.75, health: 1.2, flying: false, reward: 1,  damage: 1, pack: 5,  queue: 100, from: 30 }
+        , light:    { speed: 1.25, health: 1.1, flying: false, reward: 1,  damage: 1, pack: 4,  queue: 100, from: 40 }
+        , lucky:    { speed: 2.5,  health: 4,   flying: false, reward: 50, damage: 0, pack: 1,  queue: 0,   from: -1 }
+        , boss:     { speed: 0.75, health: 7.5, flying: false, reward: 35, damage: 5, pack: 1,  queue: 0,   from: -1 }
     }
 }
 
