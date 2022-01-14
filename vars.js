@@ -1,12 +1,11 @@
 const panelHeight = 160;
-const canvH = 900;
 const clientH = document.body.clientHeight - ( 2 * panelHeight );
-const canvW = 1900;
 const clientW = document.body.clientWidth;
-const tileDim = 100;
-const menuDim = 150;
-const towerDim = 80;
-const mobDim = 50;
+var canvH = 900;
+var canvW = 1900;
+var tileDim = 100;
+var towerDim = 0.8 * tileDim;
+var mobDim = 0.5 * tileDim;
 const frameRate = 10;
 const healthWidth = 50;
 const healthHeight = 5;
@@ -18,8 +17,13 @@ const ctxM = canvM.getContext(`2d`);
 const canvT = document.querySelector(`#towers`);
 const ctxT = canvT.getContext(`2d`);
 
+const rangeMod = 2;
+const towerDelay = 100;
+
 const bulletSpeed = 25; // todo vary by tower type
 const bulletLength = 15; // todo vary by tower type
+
+let tileTypes = [`path`,`null`,`selected`,`place`,`start`,`end`];
 
 const colour = {
     start:      `#060`
@@ -37,8 +41,9 @@ const colour = {
     , firing:   `#F5F7FA33`
 
     , basic:    `#4FC1E9`
-    , arrow:    `#A0D468`
-    , cannon:   `#E8CE4D`
+    //, arrow:    `#A0D468`
+    , arrow:    `#E8CE4D`
+    , cannon:   `#ED5565`
     // , tStroke:  `#F5F7FA`
     , tStroke:  `#3C3B3D`
     
@@ -61,6 +66,7 @@ var game = {
     , paused: false
     , over: false
     , autoSkip: false
+    , speed: 1
     , me: {
         health: 20
         , coin: 100
@@ -69,7 +75,6 @@ var game = {
     , waves: { countDown: 0, count: 0, startTick: 0, completed: 0 }
     , vars: {
         waveTime: 14990 / frameRate
-        , mobGap: 1000 / frameRate
         , upgradeCost: 75
         , maxUpgrade: 10
     }
@@ -87,6 +92,7 @@ var game = {
         , damage: 1.1
         , range: 1.1
     }
+    , editing: { active: false, tileType: null }
 }
 
 var meta = {
@@ -111,9 +117,9 @@ var stat = {
         , tanky:    { speed: 0.5,  health: 1.5, flying: false, reward: 1,  damage: 1, pack: 5,  queue: 100, from: 0 }
         , fast:     { speed: 2,    health: 0.8, flying: false, reward: 1,  damage: 1, pack: 5,  queue: 100, from: 0 }
         , flying:   { speed: 1,    health: 0.3, flying: true,  reward: 1,  damage: 1, pack: 5,  queue: 100, from: 10 }
-        , many:     { speed: 1,    health: 0.9, flying: true,  reward: 1,  damage: 1, pack: 10, queue: 50,  from: 20 }
+        , many:     { speed: 1.1,  health: 0.9, flying: true,  reward: 1,  damage: 1, pack: 10, queue: 50,  from: 20 }
         , armoured: { speed: 0.75, health: 1.2, flying: false, reward: 1,  damage: 1, pack: 5,  queue: 100, from: 30 }
-        , light:    { speed: 1.25, health: 1.1, flying: false, reward: 1,  damage: 1, pack: 4,  queue: 100, from: 40 }
+        , light:    { speed: 1.25, health: 0.9, flying: false, reward: 1,  damage: 1, pack: 4,  queue: 100, from: 40 }
         , lucky:    { speed: 2.5,  health: 4,   flying: false, reward: 50, damage: 0, pack: 1,  queue: 0,   from: -1 }
         , boss:     { speed: 0.75, health: 7.5, flying: false, reward: 35, damage: 5, pack: 1,  queue: 0,   from: -1 }
     }

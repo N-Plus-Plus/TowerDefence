@@ -1,7 +1,7 @@
 document.addEventListener(`DOMContentLoaded`, function () { onLoad(); } );
 document.addEventListener(`visibilitychange`, visibility, false );
-window.addEventListener("mousedown", function (e) { clicked( e, true ) } );
-window.addEventListener("mouseup", function (e) { clicked( e, false ) } );
+window.addEventListener("mousedown", function (e) { clicked( e, true ); mouse.clicked = true; } );
+window.addEventListener("mouseup", function (e) { clicked( e, false ); mouse.clicked = false; } );
 window.addEventListener(`mousemove`, (e) => { updateMousePos( e ) } );
 document.addEventListener("keypress", function(e) { pressed( e ) } );
 
@@ -9,7 +9,6 @@ function visibility() { if( document.visibilityState === "hidden" ){ liveness = 
 
 if( clientH / ( canvH ) > clientW / canvW ){ scaledUnit = clientW / canvW; }
 else{ scaledUnit = ( clientH ) / canvH; }
-// if( scaledUnit > 1 ){ scaledUnit = 1 }; // todo fix this properly
 
 const mouse = { x: null, y: null, clicked: false }
 
@@ -19,24 +18,13 @@ let loop = setInterval(() => {
 
 function unit( n ){ return n * scaledUnit; }
 function deunit( n ){ return n / scaledUnit; }
-const moveUnit = unit( 1 );
-const rangeUnit = 2;
-const towerDelay = 100;
 
 function onLoad(){
-    canvB.height = unit( canvH );
-    canvB.width = unit( canvW );
-    canvM.height = unit( canvH );
-    canvM.width = unit ( canvW );
-    canvT.height = unit( canvH );
-    canvT.width = unit( canvW );
     cacheAssets();
     newLevel( 3 );
 }
 function finishOnload(){
     if( loaded.done == loaded.of ){
-        // editMode = true;
-        // levelEditor();
         paintTiles();
         updateDisplay( `coin` );
         updateDisplay( `health` );
@@ -46,24 +34,24 @@ function finishOnload(){
         finishOnload();
     }, 10 ); }
 }
+function enableEditMode( xDim, yDim ){
+    game.editing.active = true;
+    levelEditor( xDim, yDim );
+    renderEditorOptions();
+}
 function updateMousePos( e ){
     let c = document.querySelector(`#background`).getBoundingClientRect();
     mouse.x = Math.min( Math.max( 0, e.clientX - c.left ), c.right - c.left);
     mouse.y = Math.min( Math.max( 0, e.clientY - c.top ), c.bottom - c.top );
+    if( game.editing.active && mouse.clicked ){ addTile(); }
 }
 function clicked( e, down ){
     if( e.target.id == `towers` ){ // when clicking on the top-most canvas
-        if( editMode && down ){
-            let vX = Math.floor( deunit( mouse.x ) / tileDim );
-            let vY = Math.floor( deunit( mouse.y ) / tileDim );
-            let t = tiles[vY][vX];
-            if( t.type == `null` ){ t.type = `place` }
-            else if( t.type == `place` ){ t.type = `path` }
-            else if( t.type == `path` ){ t.type = `start` }
-            else if( t.type == `start` ){ t.type = `end` }
-            else if( t.type == `end` ){ t.type = `null` }
-            paintTiles();
+        if( game.editing.active && down ){     
+            renderEditorOptions();
+            addTile();
         }
+        else if( game.editing.active ){ renderEditorOptions(); }
         else{
             let vX = Math.floor( deunit( mouse.x ) / tileDim );
             let vY = Math.floor( deunit( mouse.y ) / tileDim );
@@ -113,60 +101,70 @@ function clicked( e, down ){
     else if( e.target.classList.contains( `skip` ) && down ){
         if( !game.paused && !game.over ){ doSkip(); }
     }
+    else if( e.target.classList.contains( `palette` ) ){
+        game.editing.tileType = e.target.getAttribute( `palette` );
+    }
+    else if( e.target.classList.contains( `speed` ) && down ){
+        if( game.speed == 1 ){ game.speed = 2; e.target.classList = `img speed speed1`; }
+        else if( game.speed == 2 ){ game.speed = 4; e.target.classList = `img speed speed2`; }
+        else if( game.speed == 4 ){ game.speed = 1; e.target.classList = `img speed speed0`; }
+    }
 }
 function doLoop(){
     if( !liveness ){}
     else if( game.paused || game.over ){}
-    else if( editMode ){}
+    else if( game.editing.active ){}
     else{
-        // make and move mobs
-        if( game.waves.countDown > 0 ){ game.waves.countDown--; }
-        else{
-            if( wave.length == 0 ){ popNextWave(); }
-            popMobs( game.waves.count, wave[0] );
-            let unspawned = mobs.filter( element => element.countDown > -1 ).length;
-            game.waves.countDown = game.vars.waveTime + stat.mobs[mobs[0].type].queue * unspawned;
-            wave.shift();
-            game.waves.count++;
-            updateWaveCount();
-        }
-        for( m in mobs ){
-            if( mobs[m].countDown > 0 ){ mobs[m].countDown--; }
-            else if( mobs[m].countDown == 0 && !mobs[m].spawned ){
-                spawnMob( m );
-                mobs[m].countDown = -1; // to be safe                
+        for( let i = 0; i < game.speed; i++ ){
+            // make and move mobs
+            if( game.waves.countDown > 0 ){ game.waves.countDown--; }
+            else{
+                if( wave.length == 0 ){ popNextWave(); }
+                popMobs( game.waves.count, wave[0] );
+                let unspawned = mobs.filter( element => element.countDown > -1 ).length;
+                game.waves.countDown = game.vars.waveTime + stat.mobs[mobs[0].type].queue * unspawned;
+                wave.shift();
+                game.waves.count++;
+                updateWaveCount();
             }
-            else{ moveMob( m ); }
+            for( m in mobs ){
+                if( mobs[m].countDown > 0 ){ mobs[m].countDown--; }
+                else if( mobs[m].countDown == 0 && !mobs[m].spawned ){
+                    spawnMob( m );
+                    mobs[m].countDown = -1; // to be safe                
+                }
+                else{ moveMob( m ); }
+            }
+            if( mobs.filter( element => element.countDown > -1 ).length == 0 ){ 
+                if( game.autoSkip ){ doSkip(); }
+                else{ document.querySelector(`.skip`).classList.remove( `unavailable` ); }
+            }
+            else{ document.querySelector(`.skip`).classList.add( `unavailable` ); }
         }
-        if( mobs.filter( element => element.countDown > -1 ).length == 0 ){ 
-            if( game.autoSkip ){ doSkip(); }
-            else{ document.querySelector(`.skip`).classList.remove( `unavailable` ); }
-        }
-        else{ document.querySelector(`.skip`).classList.add( `unavailable` ); }
         paintMobs();
         moveParticles();
-        if( showParticles ){
-            paintParticles();
-        }
+        if( showParticles ){ paintParticles(); }
         // manage towers
-        for( t in towers ){
-            if( towers[t].countDown > 0 ){ towers[t].countDown--; }
-            else{
-                for( m in mobs ){
-                    if( towers[t].countDown > 0 ){ break; }
-                    else if( mobs[m].type !== `flying` || stat.towers[towers[t].type].flying ){
-                        if( intersect( towers[t].loc.x, towers[t].loc.y, getRange( t ), mobs[m].loc.x, mobs[m].loc.y, unit( mobDim / 3 ) ) ){
-                            launchParticle( t, m );
-                            towers[t].countDown = getRate( t );
+        for( let i = 0; i < game.speed; i++ ){
+            for( t in towers ){
+                if( towers[t].countDown > 0 ){ towers[t].countDown--; }
+                else{
+                    for( m in mobs ){
+                        if( towers[t].countDown > 0 ){ break; }
+                        else if( mobs[m].type !== `flying` || stat.towers[towers[t].type].flying ){
+                            if( intersect( towers[t].loc.x, towers[t].loc.y, getRange( t ), mobs[m].loc.x, mobs[m].loc.y, scale( unit( mobDim / 3 ) ) ) ){
+                                launchParticle( t, m );
+                                towers[t].countDown = getRate( t );
+                            }
                         }
                     }
                 }
             }
-        }
-        game.ticks++;        
-        if( game.waves.countDown % ( 100 / frameRate ) == 0 ){
-            updateWaveCountdown();
-            sortMobs();
+            game.ticks++;
+            if( game.waves.countDown % ( 100 / frameRate ) == 0 ){
+                updateWaveCountdown();
+                sortMobs();
+            }
         }
     }
 }
@@ -218,6 +216,9 @@ function newLevel( n ){
         }
     }
     pathFind( n );
+    
+    fixCanvasDim();
+
     paintTiles();
     paintMobs();
     paintTowers();
@@ -229,10 +230,33 @@ function newLevel( n ){
     updateWaveCount();
 }
 
-function levelEditor(){
-    for( let y = 0; y < canvH / tileDim; y++ ){        
+function fixCanvasDim(){    
+    tileDim = clientW / tiles[0].length;
+    if( clientH / tiles.length < tileDim ){ tileDim = clientH / tiles.length; }
+    towerDim = 0.8 * tileDim;
+    mobDim = 0.5 * tileDim;
+
+    let newH = tileDim * tiles.length;
+    canvH = newH;
+    let newW = tileDim * tiles[0].length;
+    canvW = newW;
+
+    if( clientH / canvH > clientW / canvW ){ scaledUnit = clientW / canvW; }
+    else{ scaledUnit = clientH / canvH; }
+    
+    canvB.height = unit( newH );
+    canvB.width = unit( newW );
+    canvM.height = unit( newH );
+    canvM.width = unit( newW );
+    canvT.height = unit( newH );
+    canvT.width = unit( newW );
+}
+
+function levelEditor( xDim, yDim ){
+    tiles = [];
+    for( let y = 0; y < yDim; y++ ){
         tiles.push( [] );
-        for( let x = 0; x < canvW / tileDim; x++ ){
+        for( let x = 0; x < xDim; x++ ){
             tiles[y].push( { 
                 tileX: x
                 , tileY: y
@@ -240,7 +264,49 @@ function levelEditor(){
             } );
         }
     }
+    fixCanvasDim();
     paintTiles();
+}
+function exportLevel(){
+    // trim rows    
+    for( let y = tiles.length - 1; y >= 0; y-- ){
+        if( tiles[y].filter( element => element.type == `null` ).length == tiles[0].length ){
+            tiles.splice( y, 1 );
+        }
+    }
+    // trim columns
+    let xKill = [];
+    for( let i = tiles[0].length - 1; i >= 0; i-- ){
+        let empty = 0;
+        for( let y = tiles.length - 1; y >= 0; y-- ){
+            if( tiles[y][i].type == `null` ){ empty++; }
+        }
+        if( empty == tiles.length ){ xKill.push(i); }
+    }
+    for( let y = 0; y < tiles.length; y++ ){
+        for( i in xKill ){ tiles[y].splice( xKill[i], 1 ); }
+    }
+    // add top and bottom rows
+    let w = tiles[0].length;
+    tiles.unshift( [] );
+    tiles.push( [] );
+    let n = tiles.length - 1;
+    for( let i = 0; i < w; i++ ){
+        tiles[0].push( { tileX: 0, tileY: 0, type: `null` } );
+        tiles[n].push( { tileX: 0, tileY: 0, type: `null` } );
+    }
+    for( t in tiles ){
+        tiles[t].unshift( { tileX: 0, tileY: 0, type: `null` } );
+        tiles[t].push( { tileX: 0, tileY: 0, type: `null` } );
+    }
+    // fix all coordinates
+    for( let y = 0; y < tiles.length; y++ ){
+        for( let x = 0; x < tiles[y].length; x++ ){
+            tiles[y][x].tileX = x;
+            tiles[y][x].tileY = y;
+        }
+    }
+    console.log( JSON.stringify( tiles ) );
 }
 
 function paintTiles(){
@@ -251,21 +317,19 @@ function paintTiles(){
     for( t1 in tiles ){
         for( t2 in tiles[t1] ){
             let type = String( tiles[t1][t2].type );
-            // ctxB.fillStyle = colour[tiles[t1][t2].type];
-            if( !editMode ){
+            if( !game.editing.active ){
                 if( game.level.selected !== null ){
                     if( t2 == game.level.selected.x && t1 == game.level.selected.y ){
-                        // ctxB.fillStyle = colour.selected;
                         ctxB.drawImage( img.selected, t2 * d, t1 * d, d, d );
                     }
                     else{ ctxB.drawImage( img[type], t2 * d, t1 * d, d, d ); }
                 }
                 else{ ctxB.drawImage( img[type], t2 * d, t1 * d, d, d ); }
             }
+            else{ ctxB.drawImage( img[type], t2 * d, t1 * d, d, d ); }
             ctxB.beginPath();
             ctxB.rect( tiles[t1][t2].tileX * d, tiles[t1][t2].tileY * d, d, d );
             ctxB.stroke();
-            // ctxB.fill();
             ctxB.closePath();
         }
     }
@@ -274,18 +338,21 @@ function paintMobs(){
     cleanup( ctxM );
     let dim = unit( mobDim );
     for( let m = mobs.length - 1; m >= 0; m-- ){
-    //for( m in mobs ){
         if( mobs[m].spawned ){
             ctxM.drawImage( img[mobs[m].type], mobs[m].loc.x - dim / 2, mobs[m].loc.y - dim / 2, dim, dim );
+        }
+    }
+    for( let m = mobs.length - 1; m >= 0; m-- ){
+        if( mobs[m].spawned ){
             // empty bar
             ctxM.beginPath();
-            ctxM.rect( mobs[m].loc.x - unit( healthWidth / 2 ), mobs[m].loc.y - unit( mobDim - healthHeight * 2 ), unit( healthWidth ), unit( healthHeight ) );
+            ctxM.rect( mobs[m].loc.x - unit( scale( healthWidth ) / 2 ), mobs[m].loc.y - unit( mobDim - scale( healthHeight * 2 ) ), scale( unit( healthWidth ) ), scale( unit( healthHeight ) ) );
             ctxM.fillStyle = colour.emptyHP;
             ctxM.fill();
             ctxM.closePath();
             // health bar
             ctxM.beginPath();
-            ctxM.rect( mobs[m].loc.x - unit( healthWidth / 2 ), mobs[m].loc.y - unit( mobDim - healthHeight * 2 ), unit( healthWidth ) * mobs[m].health / mobs[m].maxHealth, unit( healthHeight ) );
+            ctxM.rect( mobs[m].loc.x - unit( scale( healthWidth ) / 2 ), mobs[m].loc.y - unit( mobDim - scale( healthHeight * 2 ) ), scale( unit( healthWidth ) * mobs[m].health / mobs[m].maxHealth ), scale( unit( healthHeight ) ) );
             ctxM.fillStyle = colour.hp;
             ctxM.fill();
             ctxM.closePath();
@@ -296,11 +363,15 @@ function paintMobs(){
         let x = unit( towers[t].tileX * tileDim + tileDim / 2 ) - unit( tileDim ) * perc / 2;
         let y = unit( towers[t].tileY * tileDim );
         ctxM.beginPath();
-        ctxM.rect( x, y + unit( tileDim - firingTimerHeight ), unit( tileDim * perc ), unit( firingTimerHeight ) );
+        ctxM.rect( x, y + unit( tileDim - scale( firingTimerHeight ) ), unit( tileDim * perc ), scale( unit( firingTimerHeight ) ) );
         ctxM.fillStyle = colour.firing;
         ctxM.fill();
         ctxM.closePath();
     }
+}
+
+function scale( n ){
+    return n * ( tileDim / 100 );
 }
 
 function cleanup( ctx ){ ctx.clearRect( 0, 0, unit( canvW ), unit( canvH ) ); }
@@ -365,7 +436,7 @@ function popNextWave(){
     while( wave.length < 9 ){ wave.push( shuffle( tmp )[0] ); }
     wave = shuffle( wave );
     wave.push( `boss` );
-    if( ( game.waves.count ) + 30 % 50 == 0 ){ wave[4] = `lucky`; }
+    if( ( game.waves.count + 30 ) % 50 == 0 ){ wave[4] = `lucky`; }
 }
 
 function popMobs( n, type ){
@@ -416,7 +487,7 @@ function moveMob( m ){
     if( !cease ){
         xDir = pth[mob.newTile].x - pth[mob.oldTile].x;
         yDir = pth[mob.newTile].y - pth[mob.oldTile].y;
-        let moveAmount = moveUnit * stat.mobs[mob.type].speed;
+        let moveAmount = scale( stat.mobs[mob.type].speed );
         mob.travelled += moveAmount;
         mob.loc.x += xDir * moveAmount;
         mob.loc.y += yDir * moveAmount;
@@ -432,7 +503,7 @@ function dealDamage( m ){
         game.over = true;
         game.paused = true;
     }
-    removeMob( m );
+    else{ removeMob( m ); }
 }
 
 function removeMob( m ){
@@ -474,7 +545,7 @@ function launchParticle( t, m ){
             x: unit( towers[t].tileX * tileDim + tileDim / 2 )
             , y: unit( towers[t].tileY * tileDim + tileDim / 2 )
         }
-        , speed: bulletSpeed
+        , speed: scale( bulletSpeed )
         , damage: getDamage( t )
         , type: stat.towers[tow].type
         , range: stat.towers[tow].range
@@ -488,7 +559,7 @@ function moveParticles(){
         let xDiff = particles[p].target.x - particles[p].loc.x;
         let yDiff = particles[p].target.y - particles[p].loc.y;
         let r = xyToR( xDiff, yDiff );
-        if( Math.abs( r ) < bulletSpeed ){
+        if( Math.abs( r ) < scale( bulletSpeed ) ){
             if( particles[p].type == `direct` ){
                 for( m in mobs ){
                     let b = false;
@@ -504,9 +575,9 @@ function moveParticles(){
             }
             else if( particles[p].type == `splash` ){
                 for( m in mobs ){
-                    if( intersect( mobs[m].loc.x, mobs[m].loc.y, unit( mobDim ), particles[p].loc.x, particles[p].loc.y, unit( tileDim ) ) ){ // todo dynamic splash
+                    if( intersect( mobs[m].loc.x, mobs[m].loc.y, unit( mobDim ), particles[p].target.x, particles[p].target.y, unit( tileDim ) ) ){ // todo dynamic splash
                         if( mobs[m].type !== `flying` ){
-                            let perc = Math.min( 1, unit( mobDim ) / xyToR( particles[p].loc.x - mobs[m].loc.x, particles[p].loc.y - mobs[m].loc.y ) );
+                            let perc = Math.min( 1, unit( mobDim ) / Math.abs( xyToR( deunit( particles[p].target.x - mobs[m].loc.x ), deunit( particles[p].target.y - mobs[m].loc.y ) ) ) );
                             hurtMob( p, m, perc );
                             // todo make this work properly
                         }
@@ -517,7 +588,7 @@ function moveParticles(){
         }
         else{
             let angle = Math.atan2( yDiff, xDiff ) + makeRadian( 90 );
-            let dist = rToXY( bulletSpeed, angle );
+            let dist = rToXY( scale( bulletSpeed ), angle );
             particles[p].loc.x += dist.x;
             particles[p].loc.y += -dist.y;
         }
@@ -527,15 +598,12 @@ function moveParticles(){
 function paintParticles(){
     for( p in particles ){
         let tailAngle = Math.atan2( particles[p].target.x - particles[p].loc.x, particles[p].target.y - particles[p].loc.y );
-        let tailPlot = rToXY( unit( bulletLength ), tailAngle );
+        let tailPlot = rToXY( scale( unit( bulletLength ) ), tailAngle );
         ctxM.beginPath();
-        // ctxM.arc( particles[p].loc.x, particles[p].loc.y, unit( 3 ), 0, Math.PI * 2 );
         ctxM.moveTo( particles[p].loc.x, particles[p].loc.y );
         ctxM.lineTo( particles[p].loc.x + tailPlot.x, particles[p].loc.y + tailPlot.y );
         ctxM.fillStyle = colour[particles[p].tower];
-        // ctxM.fillStyle = colour[particles[p].tower];
-        // ctxM.fill();
-        ctxM.lineWidth = unit( 2 );
+        ctxM.lineWidth = scale( unit( 2 ) );
         ctxM.strokeStyle = colour[particles[p].tower];
         ctxM.stroke();
         ctxM.closePath();
@@ -589,6 +657,22 @@ function renderBuyOptions(){
         divs[j].style = `width: ${ 100 / i }%;`;
     }
     updateAffordDisplay();
+}
+
+function renderEditorOptions(){
+    let target = document.querySelector(`#buyPane`);
+    target.innerHTML = ``;
+    let i = 0;
+    for( t in tileTypes ){
+        if( tileTypes[t] !== `selected` ){
+            target.appendChild( buildEditPalette( t ) );
+            i++;
+        }
+    }
+    let divs = document.querySelectorAll(`.bottomBox`);
+    for( let j = 0; j < divs.length; j++ ){
+        divs[j].style = `width: ${ 100 / i }%;`;
+    }
 }
 
 function renderUpgradeOptions(){
@@ -701,6 +785,28 @@ function buildTowerUpgradeHTML( t, i ){
     return p;
 }
 
+function buildEditPalette( t ){
+    let q = tileTypes[t];
+    let p = document.createElement(`div`);
+    p.classList = `bottomBox`;
+    p.id = `${q}Paint`;
+    let p1 = document.createElement(`div`);
+    p1.classList = `palette ${q}`;
+    p1.setAttribute( `palette`, q );
+    p.appendChild( p1 );
+    return p;
+}
+
+function addTile(){
+    let vX = Math.floor( deunit( mouse.x ) / tileDim );
+    let vY = Math.floor( deunit( mouse.y ) / tileDim );
+    let t = tiles[vY][vX];
+    let rerender = false;
+    if( t.type !== game.editing.tileType ){ rerender = true; }
+    t.type = game.editing.tileType;
+    if( rerender ){ paintTiles(); }
+}
+
 function updateAffordDisplay(){
     let n = document.querySelectorAll(`[buy]`);
     for( let i = 0; i < n.length; i++ ){
@@ -716,11 +822,14 @@ function updateAffordDisplay(){
         else{ n[i].classList.add(`inactive`); }
     }
 }
+function updateDiamondDisplay(){
+    document.querySelector(`#diamond`).innerHTML = niceNumber( meta.me.diamond );
+}
 
 function getRange( t ){
     let type = towers[t].type;
     let mod = Math.pow( game.upgrade.range, towers[t].upgrade.range );
-    return unit( stat.towers[type].range * rangeUnit * tileDim * mod );
+    return unit( stat.towers[type].range * rangeMod * tileDim * mod );
 }
 function getDamage( t ){
     let type = towers[t].type;
@@ -737,6 +846,7 @@ function getReward( m ){
 function gainDiamond( w ){
     let amt = Math.floor( w / 10 );
     meta.me.diamond += amt;
+    updateDiamondDisplay();
 }
 function getUpgradeCost( t, subj ){
     let currLevel = towers[t].upgrade[subj];
@@ -845,9 +955,8 @@ function drawTower( type, x, y, ctx, t ){
     let spokes = stat.towers[type].spokes;
     let sWidth = 2;
     ctx.strokeStyle = colour.tStroke;
-    ctx.lineWidth = unit( sWidth );
+    ctx.lineWidth = scale( unit( sWidth ) );
     for( let s = 0; s < spokes; s++ ){
-        // let angle = Math.atan2( -10, 0 );
         let angle = makeRadian( 360 / spokes * s );
         if( spokes % 2 !== 0 ){ angle += makeRadian( 180 ); }
         else{ angle += makeRadian( 45 ); }
@@ -887,7 +996,6 @@ function drawTower( type, x, y, ctx, t ){
 }
 
 
-let tileTypes = [`path`,`null`,`selected`,`place`,`start`,`end`];
 var loaded = { done: 0, of: 6 }
 for( key in stat.mobs ){ loaded.of++; }
 for( key in stat.towers ){ loaded.of++; }
@@ -1048,7 +1156,6 @@ function makeDegrees( n ){
 
 UI pause
 Split path
-dynamic scale
 support towers and foils to them
 
 tower legs using either bezierCurveTo() or quadraticCurveTo()

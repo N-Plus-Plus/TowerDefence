@@ -1,5 +1,6 @@
 :root{
-    --background: #3C3B3D;
+    --backgroundOld: #3C3B3D;
+    --background: #373638;
 }
 
 body{
@@ -12,6 +13,7 @@ body{
     height: 100%;
     position: absolute;
     user-select: none;
+    overflow: hidden;
 }
 
 *,*::before{
@@ -26,6 +28,9 @@ body{
     align-items: center;
     justify-content: center;
 }
+.flexy.left,.flexy.right{ width: 100%; }
+.flexy.left{ justify-content: flex-start; }
+.flexy.right{ justify-content: flex-end; }
 
 .colStack{
     flex-direction: column;
@@ -119,3 +124,19 @@ canvas{
 #waveCount, #levelNum, #waveRecord{
     margin: 0 0.5em;
 }
+
+.palette{
+    width: 4em;
+    height: 4em;
+    cursor: pointer;
+}
+.null{ background-image: url(./tiles/null.png);}
+.end{ background-image: url(./tiles/end.png);}
+.start{ background-image: url(./tiles/start.png);}
+.path{ background-image: url(./tiles/path.png);}
+.place{ background-image: url(./tiles/place.png);}
+
+.speed{ cursor: pointer; }
+.speed0{ background-image: url(./interface/speed0.png);}
+.speed1{ background-image: url(./interface/speed1.png);}
+.speed2{ background-image: url(./interface/speed2.png);}
