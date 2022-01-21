@@ -6,52 +6,23 @@
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca&display=swap" rel="stylesheet">
+    <link href="http://fonts.cdnfonts.com/css/berlin-sans-fb-demi" rel="stylesheet">
     <link rel="icon" type="image/png" href="./interface/favico.png"/>
     <title>Tower Defence</title>
 </head>
 <body class="flexy colStack">
-    <div class="top panel flexy">
-        <div class="topBox flexy colStack">
-            <div class="flexy left">
-                <div class="img coin"></div>
-                <a id="coin">50</a>
-            </div>
-            <div class="flexy left">
-                <div class="img diamond"></div>
-                <a id="diamond">0</a>
-            </div>
-        </div>
-        <div class="topBox flexy colStack">
-            <div class="topStack">
-                Wave: <a id="waveCount">0</a>
-            </div>
-            <div class="topStack">
-                <div class="img play playPause"></div>
-                <div class="timer">
-                    Next wave in 
-                    <a id="waveTimer">0</a>
-                    seconds
-                </div>
-                <div class="img skip"></div>
-            </div>
-            <div class="topStack">
-                Level <a id="levelNum"></a> max waves completed: <a id="waveRecord"></a>
-            </div>
-        </div>
-        <div class="topBox flexy colStack">
-            <div class="flexy right">
-                <a id="health">20</a>
-                <div class="img heart"></div>
-            </div>
-            <div class="flexy right">
-                <div class="img speed speed0"></div>
-            </div>
-        </div>
-    </div>
-    <section class="flexy">
+    <div style="font-family: 'Berlin Sans FB Demi';"></div>
+    <div class="top panel flexy" id="topPanel"></div>
+    <section class="flexy hidden" id="level">
         <canvas id="background"></canvas>
         <canvas id="mobs"></canvas>
         <canvas id="towers"></canvas>
+        <canvas id="particles"></canvas>
+    </section>
+    <section class="flexy" id="mainNav">
+        <canvas id="navBackground"></canvas>
+        <canvas id="nav"></canvas>
+        <canvas id="preview"></canvas>
     </section>
     <div class="bottom panel flexy" id="buyPane"></div>
 </body>

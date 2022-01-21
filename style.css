@@ -7,6 +7,7 @@ body{
     background-color: var(--background);
     margin: 0;
     font-family: 'Lexend Deca', sans-serif;
+    /* font-family: 'Berlin Sans FB Demi', sans-serif; */
     color: #fffC;
     overflow: auto;
     width: 100%;
@@ -14,6 +15,16 @@ body{
     position: absolute;
     user-select: none;
     overflow: hidden;
+}
+
+canvas{
+    font-family: 'Berlin Sans FB Demi', sans-serif;    
+}
+@font-face {
+    font-family: 'Berlin Sans FB Demi';
+    font-style: normal;
+    font-weight: 700;
+    src: local('Berlin Sans FB Demi'), url('https://fonts.cdnfonts.com/s/13625/BRLNSDB.woff') format('woff');    
 }
 
 *,*::before{
@@ -45,6 +56,10 @@ canvas{
 #background{ z-index: 1; }
 #mobs{ z-index: 3; }
 #towers{ z-index: 5; }
+#particles{ z-index: 7; pointer-events: none; }
+#navBackground{ z-index: 1; }
+#preview{ z-index: 3; pointer-events: none;}
+#nav{ z-index: 5; }
 
 .panel{
     width: 100%;
@@ -63,17 +78,19 @@ canvas{
     padding: 1em;
 }
 .img{
-    width: 2em;
-    height: 2em;
+    width: 3vh;
+    height: 3vh;
     display: inline-block;
     margin: 1em;
 }
 .heart{ background-image: url(./interface/heart.png);}
 .coin{ background-image: url(./interface/coin.png);}
 .diamond{ background-image: url(./interface/diamond.png);}
+.wave{ background-image: url(./interface/waves.png);}
 
 .smallImg{ width: 1em; height: 1em; display: inline-block; }
-.towerImg{ width: 2.5em; height: 2.5em; display: block; }
+.towerImg{ width: 2.5em; height: 2.5em; display: block; z-index: 1; }
+.largeTowerImg{ width: 3em; height: 3em; display: block; z-index: 1; }
 .panelTitle{ font-size: 1.25em; }
 .towerName{ font-size: 1.25em; }
 .panelCost{ font-size: 1em; }
@@ -83,6 +100,7 @@ canvas{
     background-color: #444;
     cursor: pointer;
 }
+.buyButton{ width: 5em; }
 .sellButton{ background-color: #633;}
 .upgradeButton.max{
     width: 6em;
@@ -92,9 +110,11 @@ canvas{
     opacity: 0.25;
     cursor: default;
 }
-.bottomGutter{
-    margin-bottom: 1em;
-}
+
+.coinGap{ margin-right: 0.5em; pointer-events: none; }
+.bottomGutter{ margin-bottom: 0.25em; }
+.topGutter{ margin-top: 0.5em; }
+
 .play,.paused,.skip{ cursor: pointer;}
 .paused{ background-image: url(./interface/pause.png); }
 .play{ background-image: url(./interface/play.png);}
@@ -105,6 +125,12 @@ canvas{
 .basic{ background-image: url(./towers/basic.png);}
 .arrow{ background-image: url(./towers/arrow.png);}
 .cannon{ background-image: url(./towers/cannon.png);}
+.freeze{ background-image: url(./towers/freeze.png);}
+.fire{ background-image: url(./towers/fire.png);}
+.stun{ background-image: url(./towers/stun.png);}
+.sniper{ background-image: url(./towers/sniper.png);}
+.lightning{ background-image: url(./towers/lightning.png);}
+.blast{ background-image: url(./towers/blast.png);}
 
 .summaryBox{
     display: flex;
@@ -140,3 +166,24 @@ canvas{
 .speed0{ background-image: url(./interface/speed0.png);}
 .speed1{ background-image: url(./interface/speed1.png);}
 .speed2{ background-image: url(./interface/speed2.png);}
+
+/* .colour.basic{ background-color: #EC87C0;}
+.colour.arrow{ background-color: #E8CE4D;}
+.colour.cannon{ background-color: #ED5565;}
+.colour.freeze{ background-color: #5D9CEC;}
+.colour.fire{ background-color: #FC6E51;}
+.colour.stun{ background-color: #8067B7;}
+.colour.sniper{ background-color: #48CFAD;}
+.colour.lightning{ background-color: #4FC1E9;}
+.colour.blast{ background-color: #A0D468;} */
+.colour.background{ z-index: 0; }
+
+.hidden{
+    pointer-events: none;
+    display: none;
+}
+.logo{
+    width: 20em;
+    height: 8em;
+    background-image: url(./interface/logo.png);
+}
