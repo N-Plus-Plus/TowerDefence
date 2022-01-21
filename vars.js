@@ -159,12 +159,18 @@ var stat = {
         , arrow:    { default: true,  flying: true,  range: 1.5,  damage: 0.75,  rate: 0.75, type: `direct`,   cat: `damage`,   mod: 6 / 5, upg: [`rate`,`damage`,`range`] }
         , cannon:   { default: true,  flying: false, range: 0.75, damage: 1.75,  rate: 1.5,  type: `splash`,   cat: `damage`,   mod: 3 / 2, upg: [`rate`,`damage`,`range`,`splash`], splash: 0.25 }
         // unlockable
-        , sniper:   { default: false, flying: true,  range: 2.5,  damage: 3,     rate: 6,    type: `direct`,   cat: `damage`,   mod: 4 / 3, upg: [`rate`,`damage`,`range`] }
-        , freeze:   { default: false, flying: false, range: 0.5,  damage: 0,     rate: 1.25, type: `slow`,     cat: `support`,   mod: 5 / 4, upg: [`range`,`amount`,`duration`], amount: 0.75, duration: 50 }
-        , fire:     { default: false, flying: true,  range: 0.75, damage: 0.005, rate: 1.5,  type: `burn`,     cat: `damage`,   mod: 5 / 4, upg: [`rate`,`damage`,`range`,`duration`], duration: 201 }
-        , stun:     { default: false, flying: false, range: 0.75, damage: 0,     rate: 2,    type: `stun`,     cat: `support`,   mod: 3 / 2, upg: [`rate`,`chance`,`range`,`duration`], chance: 0.1, duration: 50 }
-        , lightning:{ default: false, flying: false, range: 1.25, damage: 0.5,   rate: 1.75, type: `electric`, cat: `damage`,   mod: 4 / 3, upg: [`rate`,`damage`,`range`,`charge`] }
-        , blast:    { default: false, flying: false, range: 0.75, damage: 0.75,  rate: 1.5,  type: `direct`,   cat: `damage`,   mod: 6 / 5, upg: [`rate`,`damage`,`range`,`shots`], shots: 1 }
+        , sniper:   { default: true, flying: true,  range: 2.5,  damage: 3,     rate: 6,    type: `direct`,   cat: `damage`,   mod: 4 / 3, upg: [`rate`,`damage`,`range`] }
+        , freeze:   { default: true, flying: false, range: 0.5,  damage: 0,     rate: 1.25, type: `slow`,     cat: `support`,   mod: 5 / 4, upg: [`range`,`amount`,`duration`], amount: 0.75, duration: 50 }
+        , fire:     { default: true, flying: true,  range: 0.75, damage: 0.005, rate: 1.5,  type: `burn`,     cat: `damage`,   mod: 5 / 4, upg: [`rate`,`damage`,`range`,`duration`], duration: 201 }
+        , stun:     { default: true, flying: false, range: 0.75, damage: 0,     rate: 2,    type: `stun`,     cat: `support`,   mod: 3 / 2, upg: [`rate`,`chance`,`range`,`duration`], chance: 0.1, duration: 50 }
+        , lightning:{ default: true, flying: false, range: 1.25, damage: 0.5,   rate: 1.75, type: `electric`, cat: `damage`,   mod: 4 / 3, upg: [`rate`,`damage`,`range`,`charge`] }
+        , blast:    { default: true, flying: false, range: 0.75, damage: 0.75,  rate: 1.5,  type: `direct`,   cat: `damage`,   mod: 6 / 5, upg: [`rate`,`damage`,`range`,`shots`], shots: 1 }
+        // , sniper:   { default: false, flying: true,  range: 2.5,  damage: 3,     rate: 6,    type: `direct`,   cat: `damage`,   mod: 4 / 3, upg: [`rate`,`damage`,`range`] }
+        // , freeze:   { default: false, flying: false, range: 0.5,  damage: 0,     rate: 1.25, type: `slow`,     cat: `support`,   mod: 5 / 4, upg: [`range`,`amount`,`duration`], amount: 0.75, duration: 50 }
+        // , fire:     { default: false, flying: true,  range: 0.75, damage: 0.005, rate: 1.5,  type: `burn`,     cat: `damage`,   mod: 5 / 4, upg: [`rate`,`damage`,`range`,`duration`], duration: 201 }
+        // , stun:     { default: false, flying: false, range: 0.75, damage: 0,     rate: 2,    type: `stun`,     cat: `support`,   mod: 3 / 2, upg: [`rate`,`chance`,`range`,`duration`], chance: 0.1, duration: 50 }
+        // , lightning:{ default: false, flying: false, range: 1.25, damage: 0.5,   rate: 1.75, type: `electric`, cat: `damage`,   mod: 4 / 3, upg: [`rate`,`damage`,`range`,`charge`] }
+        // , blast:    { default: false, flying: false, range: 0.75, damage: 0.75,  rate: 1.5,  type: `direct`,   cat: `damage`,   mod: 6 / 5, upg: [`rate`,`damage`,`range`,`shots`], shots: 1 }
         //, support:  { default: false, flying: false, range: 0.5,  damage: 0,    rate: 5,    type: `support`,  spokes: 4, mod: 5 / 2 }
 
         /*
